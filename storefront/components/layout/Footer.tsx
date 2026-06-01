@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { MapPin, Phone, Mail, Facebook, Instagram, Twitter } from 'lucide-react';
+import { MapPin, Phone, Mail, Share2 } from 'lucide-react';
 
 const footerNav = [
   { label: 'Home', href: '/' },
@@ -31,14 +31,11 @@ export function Footer() {
               Premium electronics and gaming retailer in Mauritius. Your destination for the latest tech.
             </p>
             <div className="flex gap-3">
-              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="rounded-lg p-2 text-gray-400 hover:bg-gray-800 hover:text-white transition-colors">
-                <Facebook className="h-5 w-5" />
+              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="rounded-lg p-2 text-gray-400 hover:bg-gray-800 hover:text-white transition-colors" aria-label="Facebook">
+                <Share2 className="h-5 w-5" />
               </a>
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="rounded-lg p-2 text-gray-400 hover:bg-gray-800 hover:text-white transition-colors">
-                <Instagram className="h-5 w-5" />
-              </a>
-              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="rounded-lg p-2 text-gray-400 hover:bg-gray-800 hover:text-white transition-colors">
-                <Twitter className="h-5 w-5" />
+              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="rounded-lg p-2 text-gray-400 hover:bg-gray-800 hover:text-white transition-colors" aria-label="Instagram">
+                <Share2 className="h-5 w-5" />
               </a>
             </div>
           </div>
