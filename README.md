@@ -87,7 +87,7 @@ For local dev, the storefront at `localhost:3000` talks to the API at `localhost
 
 ---
 
-## Seed Data
+## Seed Credentials
 
 | Role     | Email                       | Password   |
 |----------|-----------------------------|------------|

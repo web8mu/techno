@@ -1,24 +1,30 @@
 # Techno Tronics Ltd
-> Premium electronics and gaming retailer in Mauritius.
+> Premium electronics and gaming retailer based in Mauritius.
 
 ## About
-Techno Tronics Ltd is Mauritius's premier destination for consumer electronics, gaming hardware, and accessories. We offer authentic products with warranty, competitive pricing in Mauritian Rupees (MUR), and island-wide delivery.
+Techno Tronics Ltd is Mauritius's leading electronics and gaming hardware retailer. We offer a curated selection of premium laptops, desktop PCs, PC components, gaming hardware, accessories, and gadgets.
 
 ## Products
-We sell laptops, desktops, PC components, gaming hardware, monitors, networking equipment, storage devices, and accessories.
+- Laptops: MSI, ASUS ROG, gaming and creator laptops
+- Desktops: Pre-built gaming and productivity desktops
+- Components: CPUs, GPUs, RAM, SSDs, motherboards, PSUs
+- Gaming Hardware: Monitors, keyboards, mice, headsets, gaming chairs
+- Accessories: Hubs, mouse pads, desk accessories
+- Gadgets: Smart tech and portable accessories
+
+## Brands
+Intel, AMD, NVIDIA, MSI, ASUS, Gigabyte, Corsair, GameMax
 
 ## Location
-Mauritius (island-wide delivery and store pickup available)
+Royal Road, Quatre Bornes, Mauritius
 
 ## Contact
-info@technotronics.mu
-+230 5200 0000
+Email: info@technotronics.mu
+Phone: +230 5800 0000
+Website: https://technotronics.mu
 
 ## Services
-- Online shopping with secure checkout
-- Store pickup
-- Home delivery across Mauritius
-- Technical support and advice
-
-## Currency
-All prices in Mauritian Rupees (MUR / Rs). Prices are VAT-inclusive (15%).
+- Same-day delivery in Port Louis area
+- Store pickup available
+- JuiceByMCB, bank transfer, and cash payment accepted
+- VAT-registered business (VAT-inclusive pricing)

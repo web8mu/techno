@@ -34,23 +34,21 @@ Route::prefix('v1')->group(function () {
     Route::middleware('throttle:30,1')->prefix('cart')->group(function () {
         Route::get('/', [CartController::class, 'show']);
         Route::post('items', [CartController::class, 'addItem']);
-        Route::put('items/{id}', [CartController::class, 'updateItem']);
-        Route::delete('items/{id}', [CartController::class, 'removeItem']);
-        Route::delete('/', [CartController::class, 'clearCart']);
+        Route::put('items/{cartItem}', [CartController::class, 'updateItem']);
+        Route::delete('items/{cartItem}', [CartController::class, 'removeItem']);
+        Route::delete('/', [CartController::class, 'clear']);
         Route::post('coupon', [CartController::class, 'applyCoupon']);
         Route::delete('coupon', [CartController::class, 'removeCoupon']);
-        Route::middleware('auth:sanctum')->post('merge', [CartController::class, 'mergeCart']);
+        Route::post('merge', [CartController::class, 'mergeGuestCart']);
     });
 
     // Checkout - 5 req/min
-    Route::middleware('throttle:5,1')->post('checkout', [CheckoutController::class, 'checkout']);
+    Route::middleware('throttle:5,1')->post('checkout', [CheckoutController::class, 'placeOrder']);
 
     // Orders
     Route::prefix('orders')->group(function () {
-        Route::middleware('throttle:60,1')->group(function () {
-            Route::get('{orderNumber}', [OrderController::class, 'lookup']);
-            Route::post('{orderNumber}/proof', [OrderController::class, 'uploadProof']);
-        });
-        Route::middleware(['auth:sanctum', 'throttle:60,1'])->get('/', [OrderController::class, 'index']);
+        Route::get('{orderNumber}', [OrderController::class, 'show']);
+        Route::post('{orderNumber}/proof', [OrderController::class, 'uploadProof'])->middleware('throttle:10,1');
+        Route::middleware('auth:sanctum')->get('/', [OrderController::class, 'index']);
     });
 });

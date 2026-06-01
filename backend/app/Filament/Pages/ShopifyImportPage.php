@@ -6,6 +6,7 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
+use Filament\Actions\Action;
 use Filament\Forms;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
@@ -20,175 +21,159 @@ class ShopifyImportPage extends Page implements HasForms
     use InteractsWithForms;
 
     protected static ?string $navigationIcon = 'heroicon-o-arrow-up-tray';
+    protected static string $view = 'filament.pages.shopify-import';
     protected static ?string $navigationLabel = 'Shopify Import';
+    protected static ?string $title = 'Import from Shopify CSV';
     protected static ?string $navigationGroup = 'Configuration';
-    protected static string $view = 'filament.pages.shopify-import-page';
-    protected static ?int $navigationSort = 11;
 
     public ?array $data = [];
-    public array $previewRows = [];
-    public array $importResults = [];
-    public string $step = 'upload'; // upload, preview, done
+    public array $preview = [];
+    public array $results = [];
+    public bool $imported = false;
 
     public function form(Form $form): Form
     {
-        return $form
-            ->schema([
-                Forms\Components\FileUpload::make('csv_file')
-                    ->label('Shopify Products CSV')
-                    ->acceptedFileTypes(['text/csv', 'application/csv', 'text/plain'])
-                    ->disk('local')
-                    ->directory('imports')
-                    ->required(),
-            ])
-            ->statePath('data');
+        return $form->schema([
+            Forms\Components\FileUpload::make('csv_file')
+                ->label('Shopify Product Export CSV')
+                ->required()
+                ->acceptedFileTypes(['text/csv', 'text/plain', 'application/csv'])
+                ->disk('local')
+                ->directory('shopify-imports'),
+        ])->statePath('data');
     }
 
     public function preview(): void
     {
         $data = $this->form->getState();
-        $path = storage_path('app/' . $data['csv_file']);
+        if (empty($data['csv_file'])) return;
 
-        if (!file_exists($path)) {
-            Notification::make()->title('File not found.')->danger()->send();
-            return;
-        }
+        $path = storage_path('app/private/' . $data['csv_file']);
+        if (!file_exists($path)) $path = storage_path('app/' . $data['csv_file']);
+        if (!file_exists($path)) { Notification::make()->title('File not found')->danger()->send(); return; }
 
         $csv = Reader::createFromPath($path, 'r');
         $csv->setHeaderOffset(0);
-
-        $this->previewRows = collect($csv->getRecords())->take(5)->values()->toArray();
-        $this->step = 'preview';
+        $this->preview = array_slice(iterator_to_array($csv->getRecords()), 0, 5);
+        Notification::make()->title('Preview loaded — showing first 5 rows')->info()->send();
     }
 
     public function import(): void
     {
         $data = $this->form->getState();
-        $path = storage_path('app/' . $data['csv_file']);
+        if (empty($data['csv_file'])) return;
 
-        if (!file_exists($path)) {
-            Notification::make()->title('File not found.')->danger()->send();
-            return;
-        }
+        $path = storage_path('app/private/' . $data['csv_file']);
+        if (!file_exists($path)) $path = storage_path('app/' . $data['csv_file']);
+        if (!file_exists($path)) { Notification::make()->title('File not found')->danger()->send(); return; }
 
         $csv = Reader::createFromPath($path, 'r');
         $csv->setHeaderOffset(0);
+        $rows = iterator_to_array($csv->getRecords());
 
-        $records = collect($csv->getRecords())->toArray();
-
-        // Group rows by Handle (Shopify's product identifier)
+        // Group by Handle
         $grouped = [];
-        foreach ($records as $row) {
-            $handle = $row['Handle'] ?? null;
-            if ($handle) {
-                $grouped[$handle][] = $row;
-            }
+        foreach ($rows as $row) {
+            $handle = $row['Handle'] ?? '';
+            if (!$handle) continue;
+            $grouped[$handle][] = $row;
         }
 
-        $created = 0;
-        $updated = 0;
-        $skipped = 0;
-        $errors = [];
+        $created = 0; $updated = 0; $skipped = 0; $errors = [];
 
-        foreach ($grouped as $handle => $rows) {
+        foreach ($grouped as $handle => $productRows) {
             try {
-                $firstRow = $rows[0];
+                $main = $productRows[0];
+                $title = $main['Title'] ?? $handle;
+                $vendor = $main['Vendor'] ?? '';
+                $type = $main['Product Category'] ?? $main['Type'] ?? '';
+                $bodyHtml = $main['Body (HTML)'] ?? '';
+                $seoTitle = $main['SEO Title'] ?? '';
+                $seoDesc = $main['SEO Description'] ?? '';
+                $status = strtolower($main['Status'] ?? 'active') === 'active' ? 'active' : 'draft';
 
-                $title = $firstRow['Title'] ?? '';
-                if (empty($title)) {
-                    $skipped++;
-                    continue;
-                }
-
-                // Resolve or create category
-                $categoryName = $firstRow['Product Category'] ?? $firstRow['Type'] ?? 'Uncategorized';
-                $category = Category::firstOrCreate(
-                    ['slug' => Str::slug($categoryName)],
-                    ['name' => $categoryName, 'slug' => Str::slug($categoryName)]
-                );
-
-                // Resolve or create brand
-                $brandName = $firstRow['Vendor'] ?? null;
+                // Resolve brand
                 $brand = null;
-                if ($brandName) {
+                if ($vendor) {
                     $brand = Brand::firstOrCreate(
-                        ['slug' => Str::slug($brandName)],
-                        ['name' => $brandName, 'slug' => Str::slug($brandName)]
+                        ['slug' => Str::slug($vendor)],
+                        ['name' => $vendor]
                     );
                 }
 
-                $sku = $firstRow['Variant SKU'] ?? 'SKU-' . strtoupper($handle);
-                $price = (float) ($firstRow['Variant Price'] ?? 0);
-                $comparePrice = !empty($firstRow['Variant Compare At Price']) ? (float) $firstRow['Variant Compare At Price'] : null;
-                $stock = (int) ($firstRow['Variant Inventory Qty'] ?? 0);
-                $status = strtolower($firstRow['Status'] ?? 'draft') === 'active' ? 'active' : 'draft';
-                $description = $firstRow['Body HTML'] ?? '';
-
-                $productData = [
-                    'name' => $title,
-                    'category_id' => $category->id,
-                    'brand_id' => $brand?->id,
-                    'description' => $description,
-                    'price' => $price,
-                    'sale_price' => $comparePrice && $comparePrice > $price ? $price : null,
-                    'stock' => $stock,
-                    'status' => $status,
-                    'meta_title' => $firstRow['SEO Title'] ?? '',
-                    'meta_description' => $firstRow['SEO Description'] ?? '',
-                ];
-
-                $existing = Product::where('slug', Str::slug($title))
-                    ->orWhere('sku', $sku)
-                    ->first();
-
-                if ($existing) {
-                    $existing->update($productData);
-                    $product = $existing;
-                    $updated++;
-                } else {
-                    $productData['slug'] = Str::slug($title);
-                    $productData['sku'] = $sku;
-                    $product = Product::create($productData);
-                    $created++;
+                // Resolve category
+                $category = null;
+                if ($type) {
+                    $category = Category::firstOrCreate(
+                        ['slug' => Str::slug($type)],
+                        ['name' => $type]
+                    );
                 }
 
-                // Import images
-                $imagePosition = 0;
-                foreach ($rows as $row) {
-                    $imageSrc = $row['Image Src'] ?? null;
-                    if ($imageSrc) {
-                        ProductImage::updateOrCreate(
-                            ['product_id' => $product->id, 'path' => $imageSrc],
-                            [
-                                'alt' => $row['Image Alt Text'] ?? $title,
-                                'position' => $imagePosition,
-                                'is_primary' => $imagePosition === 0,
-                            ]
-                        );
-                        $imagePosition++;
+                // Find variant row with SKU
+                $variantRow = collect($productRows)->first(fn($r) => !empty($r['Variant SKU'] ?? '')) ?? $main;
+                $sku = $variantRow['Variant SKU'] ?? $handle;
+                $price = (float) ($variantRow['Variant Price'] ?? 0);
+                $compareAt = (float) ($variantRow['Variant Compare At Price'] ?? 0);
+                $stock = (int) ($variantRow['Variant Inventory Qty'] ?? 0);
+
+                $finalPrice = $compareAt > $price ? $compareAt : $price;
+                $salePrice = $compareAt > $price ? $price : null;
+
+                $product = Product::updateOrCreate(
+                    ['sku' => $sku],
+                    [
+                        'name' => $title,
+                        'slug' => Str::slug($handle),
+                        'category_id' => $category?->id,
+                        'brand_id' => $brand?->id,
+                        'description' => $bodyHtml,
+                        'price' => $finalPrice,
+                        'sale_price' => $salePrice,
+                        'stock' => max(0, $stock),
+                        'status' => $status,
+                        'meta_title' => $seoTitle ?: $title,
+                        'meta_description' => $seoDesc,
+                        'specs' => [],
+                    ]
+                );
+
+                // Handle images
+                $images = collect($productRows)
+                    ->pluck('Image Src')
+                    ->filter()
+                    ->unique()
+                    ->values();
+
+                if ($images->isNotEmpty() && $product->wasRecentlyCreated) {
+                    $product->images()->delete();
+                    foreach ($images as $i => $src) {
+                        $product->images()->create([
+                            'path' => $src,
+                            'alt' => $title,
+                            'position' => $i,
+                            'is_primary' => $i === 0,
+                        ]);
                     }
                 }
 
+                $product->wasRecentlyCreated ? $created++ : $updated++;
             } catch (\Exception $e) {
-                $errors[] = "Handle '{$handle}': " . $e->getMessage();
+                $errors[] = "Handle {$handle}: " . $e->getMessage();
                 $skipped++;
             }
         }
 
-        $this->importResults = compact('created', 'updated', 'skipped', 'errors');
-        $this->step = 'done';
-
-        Notification::make()
-            ->title("Import complete! Created: {$created}, Updated: {$updated}, Skipped: {$skipped}")
-            ->success()
-            ->send();
+        $this->results = compact('created', 'updated', 'skipped', 'errors');
+        $this->imported = true;
+        Notification::make()->title("Import complete: {$created} created, {$updated} updated, {$skipped} skipped")->success()->send();
     }
 
-    public function resetImport(): void
+    protected function getFormActions(): array
     {
-        $this->step = 'upload';
-        $this->previewRows = [];
-        $this->importResults = [];
-        $this->form->fill([]);
+        return [
+            Action::make('preview')->label('Preview')->action('preview'),
+            Action::make('import')->label('Import')->color('success')->action('import'),
+        ];
     }
 }

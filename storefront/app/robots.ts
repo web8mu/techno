@@ -1,16 +1,13 @@
-import type { MetadataRoute } from 'next';
-
-const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://technotronics.mu';
+import { MetadataRoute } from 'next';
 
 export default function robots(): MetadataRoute.Robots {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://technotronics.mu';
   return {
-    rules: [
-      {
-        userAgent: '*',
-        allow: '/',
-        disallow: ['/api/', '/checkout', '/cart', '/order-confirmation/'],
-      },
-    ],
-    sitemap: `${baseUrl}/sitemap.xml`,
+    rules: {
+      userAgent: '*',
+      allow: '/',
+      disallow: ['/admin/', '/api/'],
+    },
+    sitemap: `${appUrl}/sitemap.xml`,
   };
 }
