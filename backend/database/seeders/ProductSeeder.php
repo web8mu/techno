@@ -649,22 +649,38 @@ class ProductSeeder extends Seeder
         ];
 
         foreach ($products as $index => $productData) {
+            $productData['meta_title'] = $productData['meta_title'] ?? ($productData['name'] . ' - Techno Tronics');
+            $productData['meta_description'] = $productData['meta_description'] ?? strip_tags(substr($productData['description'], 0, 160));
+
             $product = Product::updateOrCreate(
-                ['slug' => $productData['slug']],
+                ['sku' => $productData['sku']],
                 array_merge($productData, ['specs' => json_encode($productData['specs'])])
             );
 
-            // Create placeholder image
-            $name = urlencode(substr($productData['name'], 0, 20));
-            ProductImage::updateOrCreate(
-                ['product_id' => $product->id, 'is_primary' => true],
-                [
-                    'path' => "https://placehold.co/800x600/1a1a2e/ffffff?text={$name}",
-                    'alt' => $productData['name'],
-                    'position' => 0,
-                    'is_primary' => true,
-                ]
-            );
+            if ($product->wasRecentlyCreated || !$product->images()->exists()) {
+                // Create primary placeholder image
+                $encodedName = urlencode($productData['name']);
+                ProductImage::updateOrCreate(
+                    ['product_id' => $product->id, 'is_primary' => true],
+                    [
+                        'path' => "https://placehold.co/800x600/0f172a/3b82f6?text={$encodedName}",
+                        'alt' => $productData['name'],
+                        'position' => 0,
+                        'is_primary' => true,
+                    ]
+                );
+                // Create secondary image
+                $encodedNameSide = urlencode($productData['name'] . ' - Side');
+                ProductImage::firstOrCreate(
+                    ['product_id' => $product->id, 'position' => 1],
+                    [
+                        'path' => "https://placehold.co/800x600/1e293b/60a5fa?text={$encodedNameSide}",
+                        'alt' => $productData['name'] . ' - Side view',
+                        'position' => 1,
+                        'is_primary' => false,
+                    ]
+                );
+            }
         }
     }
 }
