@@ -9,20 +9,39 @@ use App\Models\Product;
 use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class CartController extends Controller
 {
+    /**
+     * Resolve the current cart, supporting both authenticated users (via Sanctum token)
+     * and guests (via X-Session-Token header or auto-generated UUID).
+     */
     private function resolveCart(Request $request): Cart
     {
-        if ($request->user()) {
-            return Cart::firstOrCreate(['user_id' => $request->user()->id]);
+        // Try to resolve authenticated user from Bearer token manually
+        // (cart routes don't enforce auth:sanctum so we do it optionally)
+        $user = $this->resolveOptionalUser($request);
+
+        if ($user) {
+            return Cart::firstOrCreate(['user_id' => $user->id]);
         }
 
-        $token = $request->header('X-Cart-Session-Token');
+        $token = $request->header('X-Session-Token') ?: $request->input('session_token');
         if (!$token) {
             $token = Str::uuid()->toString();
         }
         return Cart::firstOrCreate(['session_token' => $token]);
+    }
+
+    private function resolveOptionalUser(Request $request): ?\App\Models\User
+    {
+        $bearerToken = $request->bearerToken();
+        if (!$bearerToken) {
+            return null;
+        }
+        $accessToken = PersonalAccessToken::findToken($bearerToken);
+        return $accessToken?->tokenable;
     }
 
     private function cartResponse(Cart $cart): array

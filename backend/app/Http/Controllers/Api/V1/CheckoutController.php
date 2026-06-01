@@ -16,9 +16,20 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class CheckoutController extends Controller
 {
+    private function resolveOptionalUser(Request $request): ?\App\Models\User
+    {
+        $bearerToken = $request->bearerToken();
+        if (!$bearerToken) {
+            return null;
+        }
+        $accessToken = PersonalAccessToken::findToken($bearerToken);
+        return $accessToken?->tokenable;
+    }
+
     public function placeOrder(Request $request)
     {
         $request->validate([
@@ -36,8 +47,8 @@ class CheckoutController extends Controller
             'session_token' => 'nullable|string',
         ]);
 
-        // Resolve cart
-        $user = $request->user();
+        // Resolve optional authenticated user
+        $user = $this->resolveOptionalUser($request);
         $cart = null;
 
         if ($user) {
