@@ -57,4 +57,39 @@ export const orderApi = {
   },
 };
 
+// --- Dashboard (authenticated) ---
+export const dashboardApi = {
+  getProfile: () => api.get('/api/v1/me'),
+  updateProfile: (data: any) => api.patch('/api/v1/me', data),
+  changePassword: (data: any) => api.post('/api/v1/me/password', data),
+  getOrders: (page = 1) => api.get('/api/v1/me/orders', { params: { page } }),
+  getOrder: (orderNumber: string) => api.get(`/api/v1/me/orders/${orderNumber}`),
+  downloadInvoice: (orderNumber: string) => api.get(`/api/v1/me/orders/${orderNumber}/invoice`, { responseType: 'blob' }),
+  reorder: (orderNumber: string) => api.post(`/api/v1/me/orders/${orderNumber}/reorder`),
+  getAddresses: () => api.get('/api/v1/me/addresses'),
+  createAddress: (data: any) => api.post('/api/v1/me/addresses', data),
+  updateAddress: (id: number, data: any) => api.put(`/api/v1/me/addresses/${id}`, data),
+  deleteAddress: (id: number) => api.delete(`/api/v1/me/addresses/${id}`),
+};
+
+// --- Reviews ---
+export const reviewApi = {
+  getReviews: (slug: string, page = 1) => api.get(`/api/v1/products/${slug}/reviews`, { params: { page } }),
+  submitReview: (slug: string, data: any) => api.post(`/api/v1/products/${slug}/reviews`, data),
+};
+
+// --- Newsletter ---
+export const newsletterApi = {
+  subscribe: (email: string, name?: string) => api.post('/api/v1/newsletter/subscribe', { email, name }),
+};
+
+// --- CMS ---
+export const cmsApi = {
+  getHomepageData: () => api.get('/api/v1/cms/homepage'),
+  getPage: (slug: string) => api.get(`/api/v1/cms/pages/${slug}`),
+  getServices: () => api.get('/api/v1/cms/services'),
+  getFaqs: () => api.get('/api/v1/cms/faqs'),
+  submitContact: (data: any) => api.post('/api/v1/cms/contact', data),
+};
+
 export default api;

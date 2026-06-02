@@ -60,4 +60,14 @@ class Product extends Model
     {
         return $this->sale_price ?? $this->price;
     }
+
+    public function reviews(): HasMany { return $this->hasMany(Review::class); }
+    public function approvedReviews(): HasMany { return $this->hasMany(Review::class)->where('status','approved'); }
+    public function getAverageRatingAttribute(): ?float {
+        $avg = $this->approvedReviews()->avg('rating');
+        return $avg ? round($avg, 1) : null;
+    }
+    public function getReviewCountAttribute(): int {
+        return $this->approvedReviews()->count();
+    }
 }

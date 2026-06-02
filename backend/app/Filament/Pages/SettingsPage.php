@@ -32,6 +32,11 @@ class SettingsPage extends Page implements HasForms
             'juice_merchant_number', 'juice_instructions',
             'bank_name', 'bank_account_name', 'bank_account_number', 'bank_branch', 'bank_swift', 'bank_instructions',
             'ga4_id', 'meta_pixel_id', 'default_theme',
+            'show_featured_categories', 'show_latest_products', 'show_best_sellers', 'show_brands',
+            'show_testimonials', 'show_services_overview', 'show_gaming_banner', 'show_newsletter',
+            'gaming_banner_title', 'gaming_banner_subtitle', 'gaming_banner_cta',
+            'contact_address', 'contact_lat', 'contact_lng', 'opening_hours',
+            'social_facebook', 'social_instagram', 'social_twitter', 'social_youtube',
         ];
         $data = [];
         foreach ($keys as $key) {
@@ -75,6 +80,34 @@ class SettingsPage extends Page implements HasForms
             Forms\Components\Section::make('Analytics & Tracking')->schema([
                 Forms\Components\TextInput::make('ga4_id')->label('GA4 Measurement ID')->placeholder('G-XXXXXXXXXX'),
                 Forms\Components\TextInput::make('meta_pixel_id')->label('Meta Pixel ID'),
+            ])->columns(2),
+
+            Forms\Components\Section::make('Homepage Sections')->schema([
+                Forms\Components\Toggle::make('show_featured_categories')->label('Featured Categories'),
+                Forms\Components\Toggle::make('show_latest_products')->label('Latest Products'),
+                Forms\Components\Toggle::make('show_best_sellers')->label('Best Sellers'),
+                Forms\Components\Toggle::make('show_brands')->label('Brands Strip'),
+                Forms\Components\Toggle::make('show_testimonials')->label('Testimonials'),
+                Forms\Components\Toggle::make('show_services_overview')->label('Services Overview'),
+                Forms\Components\Toggle::make('show_gaming_banner')->label('Gaming Banner'),
+                Forms\Components\Toggle::make('show_newsletter')->label('Newsletter Signup'),
+            ])->columns(4),
+
+            Forms\Components\Section::make('Gaming World Banner')->schema([
+                Forms\Components\TextInput::make('gaming_banner_title'),
+                Forms\Components\TextInput::make('gaming_banner_subtitle'),
+                Forms\Components\TextInput::make('gaming_banner_cta')->label('CTA Button Text'),
+            ])->columns(3),
+
+            Forms\Components\Section::make('Contact & Social')->schema([
+                Forms\Components\Textarea::make('contact_address')->rows(2)->label('Full Address for Contact Page'),
+                Forms\Components\TextInput::make('contact_lat')->label('Map Latitude'),
+                Forms\Components\TextInput::make('contact_lng')->label('Map Longitude'),
+                Forms\Components\Textarea::make('opening_hours')->rows(3)->label('Opening Hours (one per line)'),
+                Forms\Components\TextInput::make('social_facebook')->label('Facebook URL'),
+                Forms\Components\TextInput::make('social_instagram')->label('Instagram URL'),
+                Forms\Components\TextInput::make('social_twitter')->label('Twitter/X URL'),
+                Forms\Components\TextInput::make('social_youtube')->label('YouTube URL'),
             ])->columns(2),
         ])->statePath('data');
     }

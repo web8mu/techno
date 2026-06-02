@@ -20,6 +20,7 @@ class User extends Authenticatable implements FilamentUser
     protected $fillable = [
         'name',
         'email',
+        'phone',
         'password',
         'role',
     ];
@@ -51,6 +52,8 @@ class User extends Authenticatable implements FilamentUser
     {
         return $this->hasOne(Cart::class);
     }
+
+    public function reviews(): HasMany { return $this->hasMany(Review::class); }
 
     public function isAdmin(): bool
     {
