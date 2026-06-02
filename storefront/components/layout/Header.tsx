@@ -1,19 +1,24 @@
 'use client';
 
-import { ShoppingCart, Menu, User, ChevronDown, LogOut, Package } from 'lucide-react';
+import { ShoppingCart, Menu, User, ChevronDown, LogOut, Package, LayoutDashboard } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { useCartStore } from '@/lib/cart';
 import { useAuthStore } from '@/lib/auth';
 import { ThemeToggle } from './ThemeToggle';
 import { MobileMenu } from './MobileMenu';
 import { Badge } from '@/components/common/Badge';
+import { catalogApi } from '@/lib/api';
+
+const categoryIcons: Record<string, string> = {
+  Laptops: '💻', Desktops: '🖥️', Components: '⚙️', Gaming: '🎮',
+  Accessories: '🖱️', Monitors: '🖥️', Networking: '📡', Storage: '💾',
+};
 
 const navLinks = [
   { href: '/', label: 'Home' },
-  { href: '/shop', label: 'Shop' },
 ];
 
 export function Header() {
@@ -22,6 +27,15 @@ export function Header() {
   const { user, logout } = useAuthStore();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [shopMenuOpen, setShopMenuOpen] = useState(false);
+  const [categories, setCategories] = useState<any[]>([]);
+  const shopMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    catalogApi.getCategories()
+      .then((r) => setCategories(r.data.data || []))
+      .catch(() => {});
+  }, []);
 
   const cartCount = items.reduce((sum, item) => sum + item.qty, 0);
 
@@ -65,6 +79,50 @@ export function Header() {
                 {label}
               </Link>
             ))}
+
+            {/* Shop mega menu */}
+            <div className="relative" ref={shopMenuRef} onMouseEnter={() => setShopMenuOpen(true)} onMouseLeave={() => setShopMenuOpen(false)}>
+              <Link
+                href="/shop"
+                className={cn(
+                  'flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                  pathname.startsWith('/shop')
+                    ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                    : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
+                )}
+              >
+                Shop
+                <ChevronDown className="h-3 w-3" />
+              </Link>
+
+              {shopMenuOpen && categories.length > 0 && (
+                <div className="absolute left-0 top-full z-30 mt-1 w-64 rounded-xl border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-900 p-3">
+                  <div className="grid grid-cols-2 gap-1">
+                    {categories.map((cat: any) => (
+                      <Link
+                        key={cat.id}
+                        href={`/shop?category=${cat.slug}`}
+                        onClick={() => setShopMenuOpen(false)}
+                        className="flex items-center gap-2 rounded-lg px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+                      >
+                        <span className="text-base">{cat.icon || categoryIcons[cat.name] || '📦'}</span>
+                        <span className="truncate">{cat.name}</span>
+                      </Link>
+                    ))}
+                  </div>
+                  <div className="mt-2 border-t border-gray-100 pt-2 dark:border-gray-800">
+                    <Link
+                      href="/shop"
+                      onClick={() => setShopMenuOpen(false)}
+                      className="block rounded-lg px-2 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20"
+                    >
+                      View All Products →
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
+
             <Link
               href="/gaming-world"
               className={cn(
@@ -115,11 +173,19 @@ export function Header() {
                 {userMenuOpen && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setUserMenuOpen(false)} />
-                    <div className="absolute right-0 z-20 mt-1 w-48 rounded-xl border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-900">
+                    <div className="absolute right-0 z-20 mt-1 w-52 rounded-xl border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-900">
                       <Link
-                        href="/orders"
+                        href="/dashboard"
                         onClick={() => setUserMenuOpen(false)}
                         className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800 rounded-t-xl"
+                      >
+                        <LayoutDashboard className="h-4 w-4" />
+                        My Account
+                      </Link>
+                      <Link
+                        href="/dashboard/orders"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800"
                       >
                         <Package className="h-4 w-4" />
                         My Orders

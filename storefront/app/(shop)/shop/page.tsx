@@ -236,10 +236,24 @@ function ShopContent() {
 }
 
 import { ProductGridSkeleton as _Skeleton } from "@/components/product/ProductSkeleton";
+
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://technotronics.mu';
+const breadcrumbLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl },
+    { '@type': 'ListItem', position: 2, name: 'Shop', item: `${siteUrl}/shop` },
+  ],
+};
+
 export default function ShopPage() {
   return (
-    <Suspense fallback={<div className="mx-auto max-w-7xl px-4 py-8"><_Skeleton count={12} /></div>}>
-      <ShopContent />
-    </Suspense>
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
+      <Suspense fallback={<div className="mx-auto max-w-7xl px-4 py-8"><_Skeleton count={12} /></div>}>
+        <ShopContent />
+      </Suspense>
+    </>
   );
 }

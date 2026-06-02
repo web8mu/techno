@@ -2,7 +2,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, Gamepad2, Zap, Shield, Truck } from 'lucide-react';
 import { ProductGrid } from '@/components/product/ProductGrid';
-import { catalogApi } from '@/lib/api';
+import { HeroSlider } from '@/components/HeroSlider';
+import { NewsletterSignup } from '@/components/NewsletterSignup';
+import { catalogApi, cmsApi } from '@/lib/api';
 
 async function getData() {
   try {
@@ -13,15 +15,17 @@ async function getData() {
     ]);
 
     const bestSellerRes = await catalogApi.getProducts({ per_page: 8, sort: 'best_selling' }).catch(() => null);
+    const homepageRes = await cmsApi.getHomepageData().catch(() => null);
 
     return {
       latestProducts: productsRes.status === 'fulfilled' ? (productsRes.value.data.data || []) : [],
       bestSellers: bestSellerRes?.data?.data || [],
       categories: categoriesRes.status === 'fulfilled' ? (categoriesRes.value.data.data || []) : [],
       brands: brandsRes.status === 'fulfilled' ? (brandsRes.value.data.data || []) : [],
+      homepageData: homepageRes?.data?.data || homepageRes?.data || null,
     };
   } catch {
-    return { latestProducts: [], bestSellers: [], categories: [], brands: [] };
+    return { latestProducts: [], bestSellers: [], categories: [], brands: [], homepageData: null };
   }
 }
 
@@ -42,62 +46,49 @@ const features = [
   { icon: Truck, title: 'Store Pickup', desc: 'Collect from our showroom anytime' },
 ];
 
+const defaultHeroSlides = [
+  {
+    title: 'Power Your World with Premium Tech',
+    subtitle: 'Discover the latest laptops, gaming rigs, components, and accessories. Authentic products, expert advice, island-wide delivery.',
+    button_text: 'Shop Now',
+    button_url: '/shop',
+    background_image_path: '',
+  },
+];
+
+function StarRating({ rating }: { rating: number }) {
+  return (
+    <div className="flex gap-0.5">
+      {[1,2,3,4,5].map((s) => (
+        <span key={s} className={s <= rating ? 'text-amber-400' : 'text-gray-300'}>★</span>
+      ))}
+    </div>
+  );
+}
+
 export default async function HomePage() {
-  const { latestProducts, bestSellers, categories, brands } = await getData();
+  const { latestProducts, bestSellers, categories, brands, homepageData } = await getData();
+
+  const slides = homepageData?.hero_slides?.length > 0 ? homepageData.hero_slides : defaultHeroSlides;
+  const sections = homepageData?.sections || {};
+  const testimonials: any[] = homepageData?.testimonials || [];
+
+  const gamingTitle = sections.gaming_banner_title || 'Gaming World';
+  const gamingSubtitle = sections.gaming_banner_subtitle || 'A dedicated gaming universe is coming — gear, peripherals, builds, and more.';
+  const gamingCta = sections.gaming_banner_cta || 'Learn More';
+
+  const showTestimonials = sections.show_testimonials === '1' && testimonials.length > 0;
+  const showNewsletter = sections.show_newsletter !== '0';
+  const showLatest = sections.show_latest !== '0';
+  const showBestSellers = sections.show_best_sellers !== '0';
+  const showCategories = sections.show_categories !== '0';
+  const showBrands = sections.show_brands !== '0';
+  const showGamingBanner = sections.show_gaming_banner !== '0';
 
   return (
     <div className="space-y-20 pb-20">
-      {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-white">
-        {/* Animated background grid */}
-        <div className="absolute inset-0 opacity-20"
-          style={{
-            backgroundImage: 'linear-gradient(rgba(59,130,246,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.3) 1px, transparent 1px)',
-            backgroundSize: '40px 40px'
-          }}
-        />
-
-        {/* Gradient orbs */}
-        <div className="absolute top-10 right-10 h-96 w-96 rounded-full bg-blue-600/20 blur-3xl" />
-        <div className="absolute bottom-0 left-20 h-72 w-72 rounded-full bg-amber-500/10 blur-3xl" />
-
-        <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 sm:py-32 lg:px-8">
-          <div className="max-w-3xl">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-4 py-1.5 text-sm text-blue-300">
-              <Zap className="h-4 w-4" />
-              Premium Electronics &amp; Gaming — Mauritius
-            </div>
-
-            <h1 className="text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
-              Power Your World with{' '}
-              <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-                Premium Tech
-              </span>
-            </h1>
-
-            <p className="mt-6 max-w-xl text-lg leading-relaxed text-gray-300">
-              Discover the latest laptops, gaming rigs, components, and accessories. Authentic products, expert advice, island-wide delivery.
-            </p>
-
-            <div className="mt-8 flex flex-wrap gap-4">
-              <Link
-                href="/shop"
-                className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3 font-semibold text-white shadow-lg shadow-blue-600/30 transition hover:bg-blue-500 hover:shadow-blue-500/30"
-              >
-                Shop Now
-                <ArrowRight className="h-5 w-5" />
-              </Link>
-              <Link
-                href="/gaming-world"
-                className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-6 py-3 font-semibold text-white backdrop-blur-sm transition hover:bg-white/20"
-              >
-                <Gamepad2 className="h-5 w-5" />
-                Gaming World
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Hero Slider */}
+      <HeroSlider slides={slides} />
 
       {/* Features strip */}
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -117,7 +108,7 @@ export default async function HomePage() {
       </section>
 
       {/* Categories */}
-      {categories.length > 0 && (
+      {showCategories && categories.length > 0 && (
         <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Shop by Category</h2>
@@ -150,7 +141,7 @@ export default async function HomePage() {
       )}
 
       {/* Latest Products */}
-      {latestProducts.length > 0 && (
+      {showLatest && latestProducts.length > 0 && (
         <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">New Arrivals</h2>
@@ -163,7 +154,7 @@ export default async function HomePage() {
       )}
 
       {/* Best Sellers */}
-      {bestSellers.length > 0 && (
+      {showBestSellers && bestSellers.length > 0 && (
         <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Best Sellers</h2>
@@ -175,8 +166,29 @@ export default async function HomePage() {
         </section>
       )}
 
+      {/* Testimonials */}
+      {showTestimonials && (
+        <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <h2 className="mb-8 text-center text-2xl font-bold text-gray-900 dark:text-white">What Our Customers Say</h2>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {testimonials.map((t: any, i: number) => (
+              <div key={i} className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                <StarRating rating={t.rating || 5} />
+                <p className="mt-3 text-sm leading-relaxed text-gray-700 dark:text-gray-300 italic">"{t.content || t.body}"</p>
+                <div className="mt-4">
+                  <p className="font-semibold text-gray-900 dark:text-white">{t.author_name}</p>
+                  {t.role_company && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{t.role_company}</p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Brands strip */}
-      {brands.length > 0 && (
+      {showBrands && brands.length > 0 && (
         <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 className="mb-8 text-center text-xl font-bold text-gray-700 dark:text-gray-300">Brands We Carry</h2>
           <div className="flex flex-wrap items-center justify-center gap-6">
@@ -198,33 +210,46 @@ export default async function HomePage() {
       )}
 
       {/* Gaming World Teaser */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-gray-900 via-purple-950 to-gray-900 p-10 text-white">
-          <div className="absolute inset-0 opacity-30"
-            style={{
-              backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(139,92,246,0.4) 0%, transparent 50%), radial-gradient(circle at 80% 50%, rgba(59,130,246,0.3) 0%, transparent 50%)'
-            }}
-          />
-          <div className="relative flex flex-col items-center text-center gap-4">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-purple-600/30 border border-purple-500/30">
-              <Gamepad2 className="h-8 w-8 text-purple-400" />
+      {showGamingBanner && (
+        <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-gray-900 via-purple-950 to-gray-900 p-10 text-white">
+            <div className="absolute inset-0 opacity-30"
+              style={{
+                backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(139,92,246,0.4) 0%, transparent 50%), radial-gradient(circle at 80% 50%, rgba(59,130,246,0.3) 0%, transparent 50%)'
+              }}
+            />
+            <div className="relative flex flex-col items-center text-center gap-4">
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-purple-600/30 border border-purple-500/30">
+                <Gamepad2 className="h-8 w-8 text-purple-400" />
+              </div>
+              <h2 className="text-3xl font-extrabold">{gamingTitle}</h2>
+              <p className="max-w-lg text-gray-300">{gamingSubtitle}</p>
+              <div className="inline-flex items-center gap-2 rounded-full border border-purple-500/40 bg-purple-600/20 px-6 py-2 text-sm font-semibold text-purple-300">
+                ✨ Coming Soon
+              </div>
+              <Link
+                href="/gaming-world"
+                className="mt-2 inline-flex items-center gap-2 rounded-xl bg-purple-600 px-6 py-3 font-semibold text-white hover:bg-purple-500 transition"
+              >
+                {gamingCta} <ArrowRight className="h-4 w-4" />
+              </Link>
             </div>
-            <h2 className="text-3xl font-extrabold">Gaming World</h2>
-            <p className="max-w-lg text-gray-300">
-              A dedicated gaming universe is coming — gear, peripherals, builds, and more. Stay tuned.
-            </p>
-            <div className="inline-flex items-center gap-2 rounded-full border border-purple-500/40 bg-purple-600/20 px-6 py-2 text-sm font-semibold text-purple-300">
-              ✨ Coming Soon
-            </div>
-            <Link
-              href="/gaming-world"
-              className="mt-2 inline-flex items-center gap-2 rounded-xl bg-purple-600 px-6 py-3 font-semibold text-white hover:bg-purple-500 transition"
-            >
-              Learn More <ArrowRight className="h-4 w-4" />
-            </Link>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
+
+      {/* Newsletter */}
+      {showNewsletter && (
+        <section className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8">
+          <div className="rounded-2xl border border-blue-200 bg-blue-50 p-8 text-center dark:border-blue-900/40 dark:bg-blue-950/30">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Stay in the Loop</h2>
+            <p className="mt-1 mb-5 text-sm text-gray-600 dark:text-gray-400">
+              Subscribe for the latest deals, product launches, and tech news.
+            </p>
+            <NewsletterSignup />
+          </div>
+        </section>
+      )}
     </div>
   );
 }

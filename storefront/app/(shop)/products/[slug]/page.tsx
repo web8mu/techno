@@ -9,8 +9,9 @@ import { AddToCartButton } from '@/components/product/AddToCartButton';
 import { CurrencyDisplay } from '@/components/common/CurrencyDisplay';
 import { Badge } from '@/components/common/Badge';
 import { ProductViewTracker } from './ProductViewTracker';
+import { ReviewsSection } from './ReviewsSection';
 import Link from 'next/link';
-import { ChevronRight, CheckCircle, AlertCircle, XCircle } from 'lucide-react';
+import { ChevronRight, CheckCircle, AlertCircle, XCircle, Star } from 'lucide-react';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -61,7 +62,19 @@ export default async function ProductPage({ params }: Props) {
         ? 'low'
         : 'in';
 
-  const jsonLd = buildProductJsonLd(product);
+  const jsonLdBase = buildProductJsonLd(product);
+  const jsonLd = product.review_count > 0 && product.average_rating
+    ? {
+        ...jsonLdBase,
+        aggregateRating: {
+          '@type': 'AggregateRating',
+          ratingValue: parseFloat(product.average_rating).toFixed(1),
+          reviewCount: product.review_count,
+          bestRating: '5',
+          worstRating: '1',
+        },
+      }
+    : jsonLdBase;
 
   return (
     <>
@@ -121,6 +134,21 @@ export default async function ProductPage({ params }: Props) {
 
             {/* SKU */}
             <p className="text-xs text-gray-400">SKU: {product.sku}</p>
+
+            {/* Rating summary */}
+            {product.review_count > 0 && product.average_rating && (
+              <div className="flex items-center gap-2">
+                <div className="flex gap-0.5">
+                  {[1,2,3,4,5].map((s) => (
+                    <Star key={s} className={`h-4 w-4 ${s <= Math.round(parseFloat(product.average_rating)) ? 'fill-amber-400 text-amber-400' : 'fill-gray-200 text-gray-200'}`} />
+                  ))}
+                </div>
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {parseFloat(product.average_rating).toFixed(1)}
+                </span>
+                <span className="text-sm text-gray-500 dark:text-gray-400">({product.review_count} reviews)</span>
+              </div>
+            )}
 
             {/* Price */}
             <div className="flex items-end gap-3">
@@ -222,6 +250,9 @@ export default async function ProductPage({ params }: Props) {
             </div>
           </div>
         </div>
+
+        {/* Reviews */}
+        <ReviewsSection slug={slug} />
 
         {/* Related Products */}
         {relatedProducts.length > 0 && (
