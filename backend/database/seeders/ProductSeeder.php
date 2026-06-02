@@ -654,7 +654,7 @@ class ProductSeeder extends Seeder
 
             $product = Product::updateOrCreate(
                 ['sku' => $productData['sku']],
-                array_merge($productData, ['specs' => json_encode($productData['specs'])])
+                $productData
             );
 
             if ($product->wasRecentlyCreated || !$product->images()->exists()) {
