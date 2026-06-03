@@ -92,4 +92,19 @@ export const cmsApi = {
   submitContact: (data: any) => api.post('/api/v1/cms/contact', data),
 };
 
+export const gamingApi = {
+  getSlots: () => api.get('/gaming/slots'),
+  getComponents: (slot: string, selected: Record<string, number>) =>
+    api.get('/gaming/components', { params: { slot, ...Object.fromEntries(Object.entries(selected).map(([k,v]) => [`selected[${k}]`, v])) } }),
+  recommend: (budget: number) => api.post('/gaming/recommend', { budget }),
+  validate: (components: Record<string, number>) => api.post('/gaming/validate', { components }),
+  saveB: (data: { name: string; components: Record<string, number>; guest_token?: string }) => api.post('/gaming/builds', data),
+  loadBuild: (shareToken: string) => api.get(`/gaming/builds/${shareToken}`),
+  myBuilds: () => api.get('/gaming/my-builds'),
+  deleteBuild: (id: number) => api.delete(`/gaming/my-builds/${id}`),
+  buildRequest: (data: any) => api.post('/gaming/build-request', data),
+  addToCart: (components: Record<string, number>, guestToken?: string) =>
+    api.post('/gaming/add-to-cart', { components, guest_token: guestToken }),
+};
+
 export default api;

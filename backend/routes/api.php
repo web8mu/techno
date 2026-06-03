@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\CatalogController;
 use App\Http\Controllers\Api\V1\CheckoutController;
 use App\Http\Controllers\Api\V1\CmsController;
 use App\Http\Controllers\Api\V1\DashboardController;
+use App\Http\Controllers\Api\V1\GamingController;
 use App\Http\Controllers\Api\V1\NewsletterController;
 use App\Http\Controllers\Api\V1\OrderController;
 use App\Http\Controllers\Api\V1\ReviewController;
@@ -86,5 +87,21 @@ Route::prefix('v1')->group(function () {
         Route::get('cms/services', [CmsController::class, 'services']);
         Route::get('cms/faqs', [CmsController::class, 'faqs']);
         Route::post('cms/contact', [CmsController::class, 'contact'])->middleware('throttle:3,1');
+    });
+
+    // Gaming World
+    Route::prefix('gaming')->middleware('throttle:60,1')->group(function () {
+        Route::get('slots', [GamingController::class, 'slots']);
+        Route::get('components', [GamingController::class, 'components']);
+        Route::post('recommend', [GamingController::class, 'recommend']);
+        Route::post('validate', [GamingController::class, 'validate']);
+        Route::get('builds/{shareToken}', [GamingController::class, 'loadBuild']);
+        Route::post('builds', [GamingController::class, 'saveBuild']);
+        Route::post('build-request', [GamingController::class, 'buildRequest'])->middleware('throttle:5,1');
+        Route::post('add-to-cart', [GamingController::class, 'addToCart']);
+        Route::middleware('auth:sanctum')->group(function () {
+            Route::get('my-builds', [GamingController::class, 'myBuilds']);
+            Route::delete('my-builds/{id}', [GamingController::class, 'deleteBuild']);
+        });
     });
 });

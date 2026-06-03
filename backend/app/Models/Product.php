@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use App\Models\ComponentAttribute;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Product extends Model
@@ -59,6 +60,16 @@ class Product extends Model
     public function getEffectivePriceAttribute(): string
     {
         return $this->sale_price ?? $this->price;
+    }
+
+    public function componentAttribute(): HasOne
+    {
+        return $this->hasOne(ComponentAttribute::class);
+    }
+
+    public function isComponent(): bool
+    {
+        return $this->componentAttribute()->exists();
     }
 
     public function reviews(): HasMany { return $this->hasMany(Review::class); }
