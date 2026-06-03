@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             ProductSeeder::class,
             Phase2Seeder::class,
+            GamingWorldSeeder::class,
         ]);
     }
 }
