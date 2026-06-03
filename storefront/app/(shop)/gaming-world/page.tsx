@@ -12,7 +12,7 @@ import { CaseVisual } from '@/components/gaming/CaseVisual';
 const fmt = (n: number | string) =>
   `Rs ${Number(n).toLocaleString('en-MU', { minimumFractionDigits: 2 })}`;
 
-const BUDGET_TIERS = [25000, 50000, 75000, 100000, 150000, 200000];
+const BUDGET_TIERS = [120000, 150000, 155000, 225000, 360000, 400000];
 const PERF_LABELS = ['1080p', '1440p', '4K', 'Streaming', 'Workstation'];
 const SLOT_ICONS: Record<string, string> = {
   CPU: '🧠', Motherboard: '🖥', RAM: '💾', GPU: '🎮',

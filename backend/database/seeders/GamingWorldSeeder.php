@@ -298,10 +298,10 @@ class GamingWorldSeeder extends Seeder
     private function seedRecommendedBuilds(): void
     {
         $builds = [
-            // Rs 25,000 — Entry level
+            // Rs 120,000 — Entry level
             [
                 'name' => 'Entry Starter Build',
-                'budget_tier' => 25000,
+                'budget_tier' => 120000,
                 'components' => [
                     'cpu'         => 'CPU-AMD-R5-7600',
                     'motherboard' => 'MB-MSI-B650-TOMAHAWK',
@@ -313,10 +313,10 @@ class GamingWorldSeeder extends Seeder
                     'case'        => 'CASE-GAMEMAX-FALCON',
                 ],
             ],
-            // Rs 50,000 — Mid-range 1080p
+            // Rs 150,000 — Mid-range 1080p
             [
                 'name' => '1080p Gaming Build',
-                'budget_tier' => 50000,
+                'budget_tier' => 150000,
                 'components' => [
                     'cpu'         => 'CPU-AMD-R5-7600',
                     'motherboard' => 'MB-MSI-B650-TOMAHAWK',
@@ -328,10 +328,10 @@ class GamingWorldSeeder extends Seeder
                     'case'        => 'CASE-GAMEMAX-HYPE',
                 ],
             ],
-            // Rs 75,000 — 1440p capable
+            // Rs 155,000 — 1440p capable
             [
                 'name' => '1440p Gaming Build',
-                'budget_tier' => 75000,
+                'budget_tier' => 155000,
                 'components' => [
                     'cpu'         => 'CPU-AMD-R7-7700X',
                     'motherboard' => 'MB-MSI-B650-TOMAHAWK',
@@ -343,10 +343,10 @@ class GamingWorldSeeder extends Seeder
                     'case'        => 'CASE-GAMEMAX-HYPE',
                 ],
             ],
-            // Rs 100,000 — High-end 1440p/entry 4K
+            // Rs 225,000 — High-end 1440p/entry 4K
             [
                 'name' => 'High-Performance Build',
-                'budget_tier' => 100000,
+                'budget_tier' => 225000,
                 'components' => [
                     'cpu'         => 'CPU-INTEL-I7-13700K',
                     'motherboard' => 'MB-ASUS-Z790-P-DDR5',
@@ -358,10 +358,10 @@ class GamingWorldSeeder extends Seeder
                     'case'        => 'CASE-GAMEMAX-HYPE',
                 ],
             ],
-            // Rs 150,000 — Enthusiast 4K
+            // Rs 360,000 — Enthusiast 4K
             [
                 'name' => 'Enthusiast 4K Build',
-                'budget_tier' => 150000,
+                'budget_tier' => 360000,
                 'components' => [
                     'cpu'         => 'CPU-INTEL-I9-13900K',
                     'motherboard' => 'MB-ASUS-Z790-P-DDR5',
@@ -373,10 +373,10 @@ class GamingWorldSeeder extends Seeder
                     'case'        => 'CASE-GAMEMAX-HYPE',
                 ],
             ],
-            // Rs 200,000 — Workstation/Streamer
+            // Rs 400,000 — Workstation/Streamer
             [
                 'name' => 'Ultimate Creator Build',
-                'budget_tier' => 200000,
+                'budget_tier' => 400000,
                 'components' => [
                     'cpu'         => 'CPU-AMD-R9-7950X',
                     'motherboard' => 'MB-ASUS-X670E-ROG',
@@ -392,8 +392,8 @@ class GamingWorldSeeder extends Seeder
 
         foreach ($builds as $buildData) {
             $build = RecommendedBuild::updateOrCreate(
-                ['name' => $buildData['name'], 'budget_tier' => $buildData['budget_tier']],
-                ['is_active' => true]
+                ['name' => $buildData['name']],
+                ['budget_tier' => $buildData['budget_tier'], 'is_active' => true]
             );
 
             $sync = [];

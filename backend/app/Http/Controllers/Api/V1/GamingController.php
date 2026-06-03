@@ -164,11 +164,11 @@ class GamingController extends Controller
     public function validate(Request $request): JsonResponse
     {
         $request->validate([
-            'components'   => ['required', 'array'],
+            'components'   => ['sometimes', 'array'],
             'components.*' => ['nullable', 'integer', 'exists:products,id'],
         ]);
 
-        [$products, $totalPrice] = $this->resolveComponents($request->input('components'));
+        [$products, $totalPrice] = $this->resolveComponents($request->input('components', []));
 
         $compat = app(CompatibilityService::class)->check($products);
         $perf = app(PerformanceService::class)->summarize($products);

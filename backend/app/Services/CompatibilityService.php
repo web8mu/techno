@@ -139,9 +139,13 @@ class CompatibilityService
             }
         }
 
-        // Rule 9: No display path
-        if ($cpu && $cpuA && !$cpuA->has_igpu && !$gpu) {
-            $errors[] = "No graphics output: CPU has no integrated GPU and no discrete GPU is selected.";
+        // Rule 9: No display path — only enforce when both CPU and GPU slots have been
+        // explicitly decided (GPU slot present in $components, even if null means "intentionally skipped").
+        // Suppressed during partial builds / candidate checks via $skipMissingComponentRules.
+        if (!($this->skipMissingComponentRules ?? false)) {
+            if ($cpu && $cpuA && !$cpuA->has_igpu && !$gpu) {
+                $errors[] = "No graphics output: CPU has no integrated GPU and no discrete GPU is selected.";
+            }
         }
 
         // Rule 10: Compatibility overrides
@@ -174,11 +178,16 @@ class CompatibilityService
     {
         $testComponents = $currentComponents;
         $testComponents[$slot] = $candidate;
+        // Suppress Rule 9 (no-display) during slot picking — build is partial.
+        $this->skipMissingComponentRules = true;
         $result = $this->check($testComponents);
+        $this->skipMissingComponentRules = false;
         return [
             'compatible' => $result['ok'],
             'reason' => $result['ok'] ? null : ($result['errors'][0] ?? null),
             'warnings' => $result['warnings'],
         ];
     }
+
+    private bool $skipMissingComponentRules = false;
 }
