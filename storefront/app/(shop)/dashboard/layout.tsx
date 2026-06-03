@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Package, MapPin, User, Shield, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, Package, MapPin, User, Shield, ChevronRight, Gamepad2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
@@ -11,6 +11,7 @@ const navItems = [
   { href: '/dashboard/addresses', label: 'Addresses', icon: MapPin },
   { href: '/dashboard/profile', label: 'Profile', icon: User },
   { href: '/dashboard/security', label: 'Security', icon: Shield },
+  { href: '/dashboard/builds', label: 'My Builds', icon: Gamepad2 },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
